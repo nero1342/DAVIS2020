@@ -1,0 +1,67 @@
+id: STM-Original
+pretrained: null
+model:
+    name: STM
+    args:
+        #<argument keyword>: <argument value>
+        # ... more args
+optimizer:
+    name: Adam
+    args:
+        lr: 0.0001
+        # ... more args
+loss:
+    name: DiceLoss
+    args:
+        #<argument keyword>: <argument value>
+        # ... more args
+metric:
+    - name: MeanIoU
+      args:
+        nclasses: 11
+          #<argument keyword>: <argument value>
+          # ... more args
+    - name: DiceScore
+      args:
+        nclasses: 11
+        
+    # ... more metrics
+scheduler:
+    name: ReduceLROnPlateau
+    args:
+        mode:                     min
+        factor:                   0.5 
+        patience:                 5 
+        verbose:                  True
+dataset:
+    train:
+        name: DAVIS
+        args:
+            root: Data/DAVIS
+            type: train
+            height: 480 
+            width: 480
+            imset: 2017/train.txt
+            resolution: 480p
+            # ... more args
+        loader:
+            batch_size: 4
+            shuffle: True
+    val:
+        name: DAVIS
+        args:
+            root: Data/DAVIS
+            type: val
+            height: 480 
+            width: 1152
+            imset: 2017/val.txt
+            resolution: 480p
+            # ... more args
+        loader:
+            batch_size: 1
+            shuffle: False
+trainer:
+    nepochs: 10
+    val_step: 1
+    log_step: 1
+seed: 42
