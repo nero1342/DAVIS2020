@@ -2,6 +2,8 @@
 .vscode 
 .DS_Store
 Data
+runs
+STM_weights.pth 
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

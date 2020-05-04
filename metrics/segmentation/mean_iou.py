@@ -19,7 +19,7 @@ class MeanIoU():
         self.reset()
 
     def calculate(self, output, target):
-        batch_size = output.size(0)
+        batch_size = output.shape[0]
         ious = torch.zeros(self.nclasses, batch_size)
 
         prediction = self.pred_fn(output)

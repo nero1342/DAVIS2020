@@ -1,0 +1,37 @@
+pretrained: DAVIS2020/runs/STM-Original-2020_05_03-20_09_25/best_loss.pth
+model:
+    name: STM
+    args:
+        <argument keyword>: <argument value>
+        # ... more args
+loss:
+    name: diceloss
+    args:
+        #<argument keyword>: <argument value>
+        # ... more args
+metric:
+    - name: MeanIoU
+      args:
+        nclasses: 11
+          #<argument keyword>: <argument value>
+          # ... more args
+    - name: DiceScore
+      args:
+        nclasses: 11
+        
+    # ... more metrics
+dataset:
+    test:
+        name: DAVIS
+        args:
+            root: Data/DAVIS
+            type: val
+            height: 480 
+            width: 480
+            imset: 2017/val.txt
+            resolution: 480p
+            # ... more args
+        loader:
+            batch_size: 1
+            shuffle: False
+seed: 42

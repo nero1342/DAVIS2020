@@ -123,9 +123,9 @@ class DAVIS(data.Dataset):
     def get_training_augmentation(self):
         train_transform = [
 
-            A.HorizontalFlip(p=0.5),
+            #A.HorizontalFlip(p=0.5),
 
-            A.ShiftScaleRotate(scale_limit=0.5, rotate_limit=20,p = 1, border_mode = 0),
+            #A.ShiftScaleRotate(scale_limit=0.5, rotate_limit=20,p = 1, border_mode = 0),
 
             A.PadIfNeeded(min_height=480, min_width=1152, always_apply=True,border_mode = 0),
             A.RandomCrop(height=self.height, width=self.width, always_apply=True),

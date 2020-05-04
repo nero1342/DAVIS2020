@@ -46,10 +46,16 @@ def train(config):
     # 2: Define network
     set_seed(config['seed'])
     model = get_instance(config['model']).to(device)
-
+    model = nn.DataParallel(model)
+    if torch.cuda.is_available():
+        model.cuda()
+    model.eval() # turn-off BN
     # Train from pretrained if it is not None
     if pretrained is not None:
         model.load_state_dict(pretrained['model_state_dict'])
+    #pth_path = 'STM_weights.pth'
+    #print('Loading weights:', pth_path)
+    #model.load_state_dict(torch.load(pth_path))
 
     # 3: Define loss
     set_seed(config['seed'])

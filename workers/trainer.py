@@ -7,6 +7,7 @@ import numpy as np
 import os
 from datetime import datetime
 
+import torch.nn.functional as F
 from loggers import TensorboardLogger
 from utils.device import move_to, detach
 
@@ -90,16 +91,27 @@ class Trainer():
         self.model.train()
         print('Training........')
         progress_bar = tqdm(dataloader)
-        for i, (Fs, Ms, no, info) in enumerate(progress_bar):
-            continue
+        for i, (Fs, Ms, num_objects, info) in enumerate(progress_bar):
             # 1: Load img_inputs and labels
-            inp = move_to(inp, self.device)
-            lbl = move_to(lbl, self.device)
+            Fs = move_to(Fs, self.device)
+            Ms = move_to(Ms, self.device)
             # 2: Clear gradients from previous iteration
             self.optimizer.zero_grad()
             # 3: Get network outputs
-            outs = self.model(inp)
+            #print(Fs[:,:,0].shape, Ms[:,:,0].shape, num_objects, info)
+            #with torch.no_grad():
+            
+            prev_key0, prev_value0 = self.model(Fs[:,:,0], Ms[:,:,0], torch.tensor([num_objects])) 
+            prev_key1, prev_value1 = self.model(Fs[:,:,1], Ms[:,:,1], torch.tensor([num_objects]))
+            this_keys = torch.cat([prev_key0, prev_key1], dim=3)
+            this_values = torch.cat([prev_value0, prev_value1], dim=3)
+            #with torch.no_grad():
+            logit = self.model(Fs[:,:,2], this_keys, this_values, torch.tensor([num_objects]))
+            outs = F.softmax(logit, dim=1)
+        
+            #outs = self.model(Fs)
             # 4: Calculate the loss
+            lbl = Ms[:,:,2]
             loss = self.criterion(outs, lbl)
             # 5: Calculate gradients
             loss.backward()
@@ -118,8 +130,12 @@ class Trainer():
                 # 8: Update metric
                 outs = detach(outs)
                 lbl = detach(lbl)
+                lbl2 = torch.argmax(lbl, axis = 1)
+                #print(outs.shape)
+                #pred = torch.argmax(outs.cpu(), axis=1).type(torch.int)
+                #print(pred.shape)
                 for m in self.metric.values():
-                    value = m.calculate(outs, lbl)
+                    value = m.calculate(outs, lbl2)
                     m.update(value)
 
         print('+ Training result')
@@ -137,21 +153,32 @@ class Trainer():
         self.model.eval()
         print('Evaluating........')
         progress_bar = tqdm(dataloader)
-        for i, (inp, lbl) in enumerate(progress_bar):
-            # 1: Load inputs and labels
-            inp = move_to(inp, self.device)
-            lbl = move_to(lbl, self.device)
+        for i, (Fs, Ms, num_objects, info) in enumerate(progress_bar):
+            # 1: Load img_inputs and labels
+            Fs = move_to(Fs, self.device)
+            Ms = move_to(Ms, self.device)
             # 2: Get network outputs
-            outs = self.model(inp)
+            prev_key0, prev_value0 = self.model(Fs[:,:,0], Ms[:,:,0], torch.tensor([num_objects])) 
+            prev_key1, prev_value1 = self.model(Fs[:,:,1], Ms[:,:,1], torch.tensor([num_objects]))
+            this_keys = torch.cat([prev_key0, prev_key1], dim=3)
+            this_values = torch.cat([prev_value0, prev_value1], dim=3)
+            logit = self.model(Fs[:,:,2], this_keys, this_values, torch.tensor([num_objects]))
+            outs = F.softmax(logit, dim=1)
             # 3: Calculate the loss
+            lbl = Ms[:,:,2]
             loss = self.criterion(outs, lbl)
             # 4: Update loss
             running_loss.add(loss.item())
+            
             # 5: Update metric
             outs = detach(outs)
             lbl = detach(lbl)
+            lbl2 = torch.argmax(lbl, axis = 1)
+            #print(outs.shape)
+            #pred = torch.argmax(outs.cpu(), axis=1).type(torch.int)
+            #print(pred.shape)
             for m in self.metric.values():
-                value = m.calculate(outs, lbl)
+                value = m.calculate(outs, lbl2)
                 m.update(value)
 
         print('+ Evaluation result')

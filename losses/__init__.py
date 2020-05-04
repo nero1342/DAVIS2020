@@ -1,3 +1,3 @@
 #from .classification.crossentropy import BCEWithLogitsLoss, WeightedBCEWithLogitsLoss, CrossEntropyLoss
-from .losses import FocalLoss, DiceLoss
+from .losses import *
 from .mixedloss import MixedLoss
